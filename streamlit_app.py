@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 # Import utilities
-from utils.auth import get_current_user, is_authenticated, render_auth_sidebar
+from utils.auth import get_current_user, is_authenticated
 from utils.data import fetch_kaspa_price_data, get_market_stats
 from utils.ui import (
     render_page_header, 
