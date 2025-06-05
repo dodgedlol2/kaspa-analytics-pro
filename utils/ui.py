@@ -6,7 +6,6 @@ Handles styling, common components, and layout utilities
 import streamlit as st
 import streamlit_antd_components as sac
 from datetime import datetime
-from utils.auth import get_current_user, logout_user, check_feature_access
 
 def apply_custom_css():
     """Apply custom CSS styling for the entire application"""
@@ -298,14 +297,14 @@ def render_sidebar_navigation(user):
                 st.switch_page("pages/2_📊_Power_Law.py")
         
         # Network Metrics (Premium+)
-        if check_feature_access('network_metrics', user['subscription']):
+        if user['subscription'] in ['premium', 'pro']:
             if st.button("🌐 Network Metrics", use_container_width=True, key="nav_network"):
                 st.switch_page("pages/3_🌐_Network_Metrics.py")
         else:
             st.button("🔒 Network Metrics", disabled=True, use_container_width=True, help="Requires Premium+")
         
         # Data Export (Premium+)
-        if check_feature_access('data_export', user['subscription']):
+        if user['subscription'] in ['premium', 'pro']:
             if st.button("📋 Data Export", use_container_width=True, key="nav_export"):
                 st.switch_page("pages/4_📋_Data_Export.py")
         else:
@@ -323,4 +322,282 @@ def render_sidebar_navigation(user):
             st.markdown("### 🔐 Account")
             
             if st.button("🔑 Login", use_container_width=True, key="sidebar_login"):
-                st.switch_page("pages/
+                st.switch_page("pages/5_⚙️_Authentication.py")
+            
+            if st.button("🚀 Create Account", use_container_width=True, key="sidebar_signup", type="primary"):
+                st.switch_page("pages/5_⚙️_Authentication.py")
+        
+        else:
+            st.markdown("### ⚙️ Account")
+            
+            if st.button("👤 Profile & Settings", use_container_width=True, key="sidebar_profile"):
+                st.switch_page("pages/5_⚙️_Authentication.py")
+            
+            if st.button("🚪 Logout", use_container_width=True, key="sidebar_logout"):
+                from utils.auth import logout_user
+                logout_user()
+                st.rerun()
+        
+        # Quick stats in sidebar
+        render_sidebar_stats()
+
+def render_sidebar_stats():
+    """Render quick stats in sidebar"""
+    from utils.data import get_market_stats, fetch_kaspa_price_data
+    
+    st.markdown("---")
+    st.markdown("### ⚡ Quick Stats")
+    
+    df = fetch_kaspa_price_data(7)  # Last 7 days for sidebar
+    if not df.empty:
+        stats = get_market_stats(df)
+        
+        st.metric(
+            "KAS Price", 
+            f"${stats.get('current_price', 0):.4f}",
+            delta=f"{stats.get('price_change_24h', 0):+.2f}%"
+        )
+        
+        st.metric(
+            "24h Volume", 
+            f"${stats.get('volume_24h', 0)/1000000:.1f}M"
+        )
+
+def show_login_prompt(feature_name: str = "this feature"):
+    """Show login prompt for premium features"""
+    st.markdown(f"""
+    <div class="login-prompt">
+        <h3>🔐 Login Required</h3>
+        <p>To access {feature_name}, please create a free account or login.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    # Create unique keys based on feature name
+    safe_feature_name = feature_name.replace(" ", "_").replace("-", "_").replace(".", "_")
+    
+    with col1:
+        if st.button("🚀 Create Account", type="primary", use_container_width=True, key=f"create_account_{safe_feature_name}"):
+            st.switch_page("pages/5_⚙️_Authentication.py")
+    
+    with col2:
+        if st.button("🔑 Login", use_container_width=True, key=f"login_{safe_feature_name}"):
+            st.switch_page("pages/5_⚙️_Authentication.py")
+    
+    with col3:
+        if st.button("ℹ️ Learn More", use_container_width=True, key=f"learn_more_{safe_feature_name}"):
+            st.switch_page("streamlit_app.py")
+
+def show_upgrade_prompt(current_subscription: str, required_subscription: str):
+    """Show upgrade prompt for premium features"""
+    price_map = {
+        'premium': '$29/month',
+        'pro': '$99/month'
+    }
+    
+    price = price_map.get(required_subscription, '$99/month')
+    
+    st.markdown(f"""
+    <div class="upgrade-prompt">
+        <h3>⭐ {required_subscription.title()} Feature</h3>
+        <p>This feature requires a {required_subscription} subscription.</p>
+        <p><strong>Upgrade to {required_subscription.title()} - {price}</strong></p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button(
+            f"⬆️ Upgrade to {required_subscription.title()}", 
+            type="primary", 
+            use_container_width=True, 
+            key=f"upgrade_to_{required_subscription}_{current_subscription}"
+        ):
+            st.balloons()
+            st.success(f"Redirecting to {required_subscription} upgrade...")
+            st.switch_page("pages/5_⚙️_Authentication.py")
+    
+    with col2:
+        if st.button(
+            "📋 View All Plans", 
+            use_container_width=True, 
+            key=f"view_plans_{required_subscription}_{current_subscription}"
+        ):
+            st.switch_page("pages/5_⚙️_Authentication.py")
+
+def render_feature_access_check(feature_name: str, required_subscription: list, current_user):
+    """Check and handle feature access with appropriate prompts"""
+    if current_user['username'] == 'public':
+        show_login_prompt(feature_name)
+        st.stop()
+    
+    if current_user['subscription'] not in required_subscription:
+        # Determine what subscription they need
+        if 'premium' in required_subscription and current_user['subscription'] == 'free':
+            show_upgrade_prompt(current_user['subscription'], 'premium')
+        elif 'pro' in required_subscription and current_user['subscription'] in ['free', 'premium']:
+            show_upgrade_prompt(current_user['subscription'], 'pro')
+        else:
+            st.error(f"🔒 Access denied. Required: {', '.join(required_subscription)}")
+        st.stop()
+
+def render_subscription_comparison():
+    """Render subscription comparison table"""
+    st.subheader("📊 Subscription Comparison")
+    
+    features = [
+        {"feature": "Basic Price Charts", "free": "✅", "premium": "✅", "pro": "✅"},
+        {"feature": "30-day History", "free": "✅", "premium": "✅", "pro": "✅"},
+        {"feature": "Full Historical Data", "free": "❌", "premium": "✅", "pro": "✅"},
+        {"feature": "Power Law Analysis", "free": "Basic", "premium": "Advanced", "pro": "Advanced"},
+        {"feature": "Network Metrics", "free": "❌", "premium": "✅", "pro": "✅"},
+        {"feature": "Data Export", "free": "❌", "premium": "✅", "pro": "✅"},
+        {"feature": "API Access", "free": "❌", "premium": "Limited", "pro": "Full"},
+        {"feature": "Custom Models", "free": "❌", "premium": "❌", "pro": "✅"},
+        {"feature": "Priority Support", "free": "❌", "premium": "❌", "pro": "✅"},
+    ]
+    
+    # Create comparison table
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown("**Feature**")
+        for feature in features:
+            st.write(feature["feature"])
+    
+    with col2:
+        st.markdown("**Free**")
+        for feature in features:
+            st.write(feature["free"])
+    
+    with col3:
+        st.markdown("**Premium**")
+        for feature in features:
+            st.write(feature["premium"])
+    
+    with col4:
+        st.markdown("**Pro**")
+        for feature in features:
+            st.write(feature["pro"])
+
+def render_loading_spinner(message: str = "Loading..."):
+    """Render loading spinner with message"""
+    with st.spinner(message):
+        return True
+
+def render_error_page(error_message: str, show_navigation: bool = True):
+    """Render error page with navigation options"""
+    st.error(f"❌ {error_message}")
+    
+    if show_navigation:
+        st.markdown("### 🔧 What you can do:")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if st.button("🏠 Go Home", use_container_width=True, key="error_home"):
+                st.switch_page("streamlit_app.py")
+        
+        with col2:
+            if st.button("🔄 Refresh Page", use_container_width=True, key="error_refresh"):
+                st.rerun()
+        
+        with col3:
+            if st.button("📞 Contact Support", use_container_width=True, key="error_support"):
+                st.info("📧 Email: support@kaspa-analytics.com")
+
+def render_success_message(message: str, show_confetti: bool = False):
+    """Render success message with optional confetti"""
+    if show_confetti:
+        st.balloons()
+    
+    st.success(f"✅ {message}")
+
+def render_info_box(title: str, content: str, icon: str = "ℹ️"):
+    """Render information box"""
+    st.markdown(f"""
+    <div class="feature-highlight">
+        <h4>{icon} {title}</h4>
+        <p>{content}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+def render_stats_cards(stats: dict):
+    """Render statistics as cards"""
+    cols = st.columns(len(stats))
+    
+    for i, (label, value) in enumerate(stats.items()):
+        with cols[i]:
+            if isinstance(value, dict):
+                st.metric(label, value.get('value', ''), delta=value.get('delta'))
+            else:
+                st.metric(label, value)
+
+def render_footer():
+    """Render application footer"""
+    st.markdown("---")
+    st.markdown("""
+    <div class="footer">
+        <p><strong>💎 Kaspa Analytics Pro</strong> - Professional blockchain analysis platform</p>
+        <p>
+            <a href="https://kaspa-analytics.com/about">About</a> | 
+            <a href="https://kaspa-analytics.com/privacy">Privacy Policy</a> | 
+            <a href="https://kaspa-analytics.com/terms">Terms of Service</a> | 
+            <a href="https://kaspa-analytics.com/contact">Contact</a>
+        </p>
+        <p>© 2024 Kaspa Analytics Pro. All rights reserved.</p>
+        <p><small>Data provided for educational and analysis purposes. Not financial advice.</small></p>
+    </div>
+    """, unsafe_allow_html=True)
+
+def format_number(num: float, prefix: str = "", suffix: str = "", decimals: int = 2) -> str:
+    """Format numbers for display"""
+    if num >= 1e9:
+        return f"{prefix}{num/1e9:.{decimals}f}B{suffix}"
+    elif num >= 1e6:
+        return f"{prefix}{num/1e6:.{decimals}f}M{suffix}"
+    elif num >= 1e3:
+        return f"{prefix}{num/1e3:.{decimals}f}K{suffix}"
+    else:
+        return f"{prefix}{num:.{decimals}f}{suffix}"
+
+def format_percentage(value: float, show_sign: bool = True) -> str:
+    """Format percentage values"""
+    sign = "+" if value > 0 and show_sign else ""
+    return f"{sign}{value:.2f}%"
+
+def render_chart_controls():
+    """Render common chart control elements"""
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        chart_type = st.selectbox(
+            "Chart Type",
+            ["Line", "Candlestick", "Area"],
+            key="chart_type_control"
+        )
+    
+    with col2:
+        timeframe = st.selectbox(
+            "Timeframe",
+            ["1H", "4H", "1D", "1W"],
+            index=2,  # Default to 1D
+            key="timeframe_control"
+        )
+    
+    with col3:
+        time_range = st.selectbox(
+            "Range",
+            ["7D", "30D", "3M", "1Y", "All"],
+            index=1,  # Default to 30D
+            key="time_range_control"
+        )
+    
+    return chart_type, timeframe, time_range
+
+def render_breadcrumbs(pages: list):
+    """Render breadcrumb navigation"""
+    breadcrumb_html = " > ".join([f'<a href="{page["url"]}">{page["name"]}</a>' for page in pages])
+    st.markdown(f"**Navigation:** {breadcrumb_html}", unsafe_allow_html=True)
