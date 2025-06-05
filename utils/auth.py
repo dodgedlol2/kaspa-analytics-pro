@@ -288,3 +288,47 @@ def get_subscription_features(subscription_level):
     return features.get(subscription_level, features['public'])
 
 def check_feature_access(feature_name, user_subscription):
+    """Check if user has access to specific feature"""
+    feature_requirements = {
+        'basic_charts': ['public', 'free', 'premium', 'pro'],
+        'advanced_charts': ['premium', 'pro'],
+        'power_law_basic': ['free', 'premium', 'pro'],
+        'power_law_advanced': ['premium', 'pro'],
+        'network_metrics': ['premium', 'pro'],
+        'data_export': ['premium', 'pro'],
+        'api_access': ['pro'],
+        'custom_models': ['pro'],
+        'admin_panel': ['pro'],  # Only for admin user specifically
+    }
+    
+    required_subscriptions = feature_requirements.get(feature_name, ['pro'])
+    return user_subscription in required_subscriptions
+
+def save_auth_config():
+    """Save authentication configuration to file"""
+    try:
+        config_path = Path("config/user_config.yaml")
+        config_path.parent.mkdir(exist_ok=True)
+        
+        config = st.session_state.get('auth_config', {})
+        
+        with open(config_path, 'w') as file:
+            yaml.dump(config, file, default_flow_style=False)
+        
+        return True
+    except Exception as e:
+        st.error(f"Error saving configuration: {e}")
+        return False
+
+def get_user_stats(username):
+    """Get user statistics and activity"""
+    # This would typically come from a database
+    # For demo purposes, return mock data
+    return {
+        'login_count': 42,
+        'last_login': '2024-01-15',
+        'features_used': ['price_charts', 'power_law', 'data_export'],
+        'subscription_start': '2024-01-01',
+        'data_exports': 15,
+        'api_calls': 1250
+    }
