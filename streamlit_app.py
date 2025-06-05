@@ -6,8 +6,16 @@ Entry point for the multi-page Streamlit application
 import streamlit as st
 import streamlit_antd_components as sac
 from datetime import datetime
-import plotly.graph_objects as go
-import plotly.express as px
+import pandas as pd
+import numpy as np
+
+# Try to import Plotly, fallback gracefully
+try:
+    import plotly.graph_objects as go
+    import plotly.express as px
+    PLOTLY_AVAILABLE = True
+except ImportError:
+    PLOTLY_AVAILABLE = False
 
 # Import utilities
 from utils.auth import get_current_user, is_authenticated
@@ -142,25 +150,29 @@ def render_public_homepage():
         st.subheader("📈 7-Day Price Preview")
         chart_data = df.tail(7)
         
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=chart_data['timestamp'], 
-            y=chart_data['price'],
-            mode='lines',
-            name='KAS Price',
-            line=dict(color='#70C7BA', width=3)
-        ))
-        
-        fig.update_layout(
-            title="Kaspa Price - Last 7 Days (Public Preview)",
-            xaxis_title="Date",
-            yaxis_title="Price (USD)",
-            height=400,
-            template="plotly_white",
-            showlegend=False
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
+        if PLOTLY_AVAILABLE:
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=chart_data['timestamp'], 
+                y=chart_data['price'],
+                mode='lines',
+                name='KAS Price',
+                line=dict(color='#70C7BA', width=3)
+            ))
+            
+            fig.update_layout(
+                title="Kaspa Price - Last 7 Days (Public Preview)",
+                xaxis_title="Date",
+                yaxis_title="Price (USD)",
+                height=400,
+                template="plotly_white",
+                showlegend=False
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            # Fallback to basic line chart
+            st.line_chart(chart_data.set_index('timestamp')['price'])
         
         st.info("📊 Public users see 7-day preview. Create a free account for 30+ days of data!")
     
@@ -286,7 +298,7 @@ def render_authenticated_homepage(user):
         ))
         
         # Add volume for premium users
-        if subscription in ['premium', 'pro']:
+        if subscription in ['premium', 'pro'] and PLOTLY_AVAILABLE:
             fig.add_trace(go.Scatter(
                 x=chart_data['timestamp'],
                 y=chart_data['volume'] / 1000000,  # Scale volume
@@ -307,15 +319,19 @@ def render_authenticated_homepage(user):
                 )
             )
         
-        fig.update_layout(
-            title=f"Kaspa Price Analysis - {subscription.title()} View",
-            xaxis_title="Date",
-            yaxis_title="Price (USD)",
-            height=500,
-            template="plotly_white"
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
+        if PLOTLY_AVAILABLE:
+            fig.update_layout(
+                title=f"Kaspa Price Analysis - {subscription.title()} View",
+                xaxis_title="Date",
+                yaxis_title="Price (USD)",
+                height=500,
+                template="plotly_white"
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            # Fallback to basic chart
+            st.line_chart(chart_data.set_index('timestamp')['price'])
     
     # Quick actions dashboard
     st.subheader("⚡ Quick Actions")
