@@ -3,6 +3,15 @@ Kaspa Analytics Pro - Main Homepage
 Updated with sac.menu navigation integration
 """
 
+# Add this at the very top of streamlit_app.py, right after the imports
+import streamlit as st
+
+# Clear any cached page information to prevent old file references
+if 'pages_cleared' not in st.session_state:
+    st.cache_data.clear()
+    st.cache_resource.clear()
+    st.session_state.pages_cleared = True
+    
 import streamlit as st
 import streamlit_antd_components as sac
 from datetime import datetime
