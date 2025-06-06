@@ -450,26 +450,10 @@ def handle_navigation(selected, user):
         render_sidebar_stats()
 
 def render_sidebar_stats():
-    """Render quick stats in sidebar"""
-    from utils.data import get_market_stats, fetch_kaspa_price_data
-    
-    st.markdown("---")
+    """Render simple static stats in sidebar"""
     st.markdown("### ⚡ Quick Stats")
-    
-    df = fetch_kaspa_price_data(7)  # Last 7 days for sidebar
-    if not df.empty:
-        stats = get_market_stats(df)
-        
-        st.metric(
-            "KAS Price", 
-            f"${stats.get('current_price', 0):.4f}",
-            delta=f"{stats.get('price_change_24h', 0):+.2f}%"
-        )
-        
-        st.metric(
-            "24h Volume", 
-            f"${stats.get('volume_24h', 0)/1000000:.1f}M"
-        )
+    st.metric("KAS Price", "$0.0250", "+2.1%")
+    st.metric("24h Volume", "$1.2M")
 
 def show_login_prompt(feature_name: str = "this feature"):
     """Show login prompt for premium features"""
