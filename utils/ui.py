@@ -6,6 +6,7 @@ Handles styling, common components, and layout utilities
 import streamlit as st
 import streamlit_antd_components as sac
 from datetime import datetime
+from utils.auth import get_current_user, logout_user, check_feature_access
 
 def apply_custom_css():
     """Apply custom CSS styling for the entire application"""
@@ -297,14 +298,14 @@ def render_sidebar_navigation(user):
                 st.switch_page("pages/2_📊_Power_Law.py")
         
         # Network Metrics (Premium+)
-        if user['subscription'] in ['premium', 'pro']:
+        if check_feature_access('network_metrics', user['subscription']):
             if st.button("🌐 Network Metrics", use_container_width=True, key="nav_network"):
                 st.switch_page("pages/3_🌐_Network_Metrics.py")
         else:
             st.button("🔒 Network Metrics", disabled=True, use_container_width=True, help="Requires Premium+")
         
         # Data Export (Premium+)
-        if user['subscription'] in ['premium', 'pro']:
+        if check_feature_access('data_export', user['subscription']):
             if st.button("📋 Data Export", use_container_width=True, key="nav_export"):
                 st.switch_page("pages/4_📋_Data_Export.py")
         else:
@@ -334,7 +335,6 @@ def render_sidebar_navigation(user):
                 st.switch_page("pages/5_⚙️_Authentication.py")
             
             if st.button("🚪 Logout", use_container_width=True, key="sidebar_logout"):
-                from utils.auth import logout_user
                 logout_user()
                 st.rerun()
         
