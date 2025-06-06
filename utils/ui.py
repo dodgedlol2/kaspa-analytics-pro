@@ -424,10 +424,30 @@ def handle_navigation(selected, user):
         
         # Admin Panel (Admin only)
         if user['username'] == 'admin':
-            if st.button("👑 Admin Panel", use_container_width=True, key="nav_admin"):
-                st.switch_page("pages/6_👑_Admin_Panel.py")
+            menu_items.append(
+                sac.MenuItem(type='divider')
+            )
+            menu_items.append(
+                sac.MenuItem('admin_panel', icon='shield-check', description='Admin tools', 
+                           tag=sac.Tag('Admin', color='red'))
+            )
+        
+        # Render the menu
+        selected = sac.menu(
+            items=menu_items,
+            key='main_navigation',
+            open_all=False,
+            indent=20,
+            size='default'
+        )
+        
+        # Handle navigation
+        handle_navigation(selected, user)
         
         st.markdown("---")
+        
+        # Quick stats in sidebar
+        render_sidebar_stats()
 
 def render_sidebar_stats():
     """Render quick stats in sidebar"""
