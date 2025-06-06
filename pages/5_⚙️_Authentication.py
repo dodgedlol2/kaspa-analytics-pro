@@ -22,8 +22,7 @@ from utils.ui import (
     render_sidebar_navigation,
     apply_custom_css,
     render_subscription_comparison,
-    render_footer,
-    set_current_page
+    render_footer
 )
 
 # Configure page
@@ -33,9 +32,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-# Set current page for menu highlighting
-set_current_page('authentication')
 
 # SEO Meta Tags
 st.markdown("""
