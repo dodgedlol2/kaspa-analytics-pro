@@ -1,53 +1,36 @@
-# Streamlit Configuration for Kaspa Analytics Pro
+credentials:
+  usernames:
+    admin:
+      email: admin@kaspalytics.com
+      first_name: Admin
+      last_name: User
+      password: admin123  # Will be auto-hashed by streamlit-authenticator
+      subscription: pro
+      failed_login_attempts: 0
+      logged_in: false
+    premium_user:
+      email: premium@example.com
+      first_name: Premium
+      last_name: User
+      password: premium123  # Will be auto-hashed by streamlit-authenticator
+      subscription: premium
+      failed_login_attempts: 0
+      logged_in: false
+    free_user:
+      email: free@example.com
+      first_name: Free
+      last_name: User
+      password: free123  # Will be auto-hashed by streamlit-authenticator
+      subscription: free
+      failed_login_attempts: 0
+      logged_in: false
 
-[global]
-# Development mode
-developmentMode = false
+cookie:
+  name: kaspa_analytics_auth
+  key: kaspa_secret_key_change_in_production  # CHANGE THIS IN PRODUCTION!
+  expiry_days: 30
 
-# Data directory
-dataDir = ".streamlit"
-
-[logger]
-# Logging level
-level = "info"
-
-[client]
-# Whether to enable CORS
-caching = true
-
-# Connection timeout
-toolbarMode = "viewer"
-
-[server]
-# Port configuration
-port = 8501
-baseUrlPath = ""
-
-# Enable CORS
-enableCORS = false
-enableXsrfProtection = true
-
-# File upload settings
-maxUploadSize = 200
-maxMessageSize = 200
-
-# Enable websocket compression
-enableWebsocketCompression = false
-
-[browser]
-# Whether to automatically open browser
-gatherUsageStats = false
-
-[theme]
-# App theming
-primaryColor = "#70C7BA"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F0F2F6"
-textColor = "#262730"
-font = "sans serif"
-
-[runner]
-# Script runner settings
-magicEnabled = true
-installTracer = false
-fixMatplotlib = true
+preauthorized:
+  - admin@kaspalytics.com
+  - newuser@kaspalytics.com
+  - beta@kaspalytics.com
