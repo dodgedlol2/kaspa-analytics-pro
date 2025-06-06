@@ -4,17 +4,11 @@
 # Development mode
 developmentMode = false
 
-# Data directory
-dataDir = ".streamlit"
-
 [logger]
 # Logging level
 level = "info"
 
 [client]
-# Whether to enable CORS
-caching = true
-
 # Connection timeout
 toolbarMode = "viewer"
 
@@ -45,9 +39,3 @@ backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F0F2F6"
 textColor = "#262730"
 font = "sans serif"
-
-[runner]
-# Script runner settings
-magicEnabled = true
-installTracer = false
-fixMatplotlib = true
