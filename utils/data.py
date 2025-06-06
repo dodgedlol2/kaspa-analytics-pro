@@ -30,7 +30,7 @@ def fetch_kaspa_price_data(days_back: int = 365) -> pd.DataFrame:
         # Generate realistic mock data for demo
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days_back)
-        dates = pd.date_range(start=start_date, end=end_date, freq='H')  # Hourly data
+        dates = pd.date_range(start=start_date, end=end_date, freq='h')  # Hourly data
         
         np.random.seed(42)
         
