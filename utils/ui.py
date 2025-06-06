@@ -1,7 +1,7 @@
 """
 UI utilities and components for Kaspa Analytics Pro
 Handles styling, common components, and layout utilities
-Updated with sac.menu navigation integration
+Updated with sac.menu navigation integration and hidden default Streamlit navigation
 """
 
 import streamlit as st
@@ -13,6 +13,36 @@ def apply_custom_css():
     """Apply custom CSS styling for the entire application"""
     st.markdown("""
     <style>
+    /* Hide Streamlit's default page navigation */
+    .stSelectbox[data-testid="stSelectbox"] {
+        display: none !important;
+    }
+    
+    /* Hide the default page navigation in sidebar */
+    section[data-testid="stSidebar"] > div:first-child > div:first-child > div:first-child {
+        display: none !important;
+    }
+    
+    /* Hide Streamlit's auto-generated page navigation */
+    [data-testid="stSidebarNav"] {
+        display: none !important;
+    }
+    
+    /* Hide sidebar navigation links */
+    .css-1d391kg, .css-1r6slb0, .css-1lcbmhc {
+        display: none !important;
+    }
+    
+    /* Hide any auto-generated navigation elements */
+    ul[data-testid="stSidebarNav"] {
+        display: none !important;
+    }
+    
+    /* Hide navigation radio buttons if they appear */
+    .stRadio[data-testid="stRadio"] {
+        display: none !important;
+    }
+    
     /* Main theme colors */
     :root {
         --kaspa-primary: #70C7BA;
@@ -257,11 +287,11 @@ def render_page_header(title: str, subtitle: str = "", show_auth_buttons: bool =
             
             with auth_cols[0]:
                 if st.button("🔑 Login", key="header_login_btn", use_container_width=True):
-                    st.switch_page("pages/5_⚙️_Authentication.py")
+                    st.switch_page("pages/authentication.py")
             
             with auth_cols[1]:
                 if st.button("🚀 Sign Up", key="header_signup_btn", use_container_width=True, type="primary"):
-                    st.switch_page("pages/5_⚙️_Authentication.py")
+                    st.switch_page("pages/authentication.py")
 
 def build_menu_items(user):
     """Build menu items based on user subscription level"""
@@ -385,15 +415,15 @@ def handle_menu_selection(selected_page, user):
     if not selected_page:
         return
     
-    # Navigation mapping
+    # Updated navigation mapping (using renamed files without numbers)
     page_mapping = {
         'dashboard': 'streamlit_app.py',
-        'price_charts': 'pages/1_📈_Price_Charts.py',
-        'power_law': 'pages/2_📊_Power_Law.py',
-        'network_metrics': 'pages/3_🌐_Network_Metrics.py',
-        'data_export': 'pages/4_📋_Data_Export.py',
-        'authentication': 'pages/5_⚙️_Authentication.py',
-        'admin_panel': 'pages/6_👑_Admin_Panel.py'
+        'price_charts': 'pages/price_charts.py',
+        'power_law': 'pages/power_law.py',
+        'network_metrics': 'pages/network_metrics.py',
+        'data_export': 'pages/data_export.py',
+        'authentication': 'pages/authentication.py',
+        'admin_panel': 'pages/admin_panel.py'
     }
     
     # Check if the selected page exists in mapping
@@ -404,14 +434,14 @@ def handle_menu_selection(selected_page, user):
         if selected_page in ['power_law'] and user['subscription'] == 'public':
             st.error("🔐 Please log in to access this feature")
             st.info("Redirecting to authentication...")
-            st.switch_page('pages/5_⚙️_Authentication.py')
+            st.switch_page('pages/authentication.py')
             return
         
         if selected_page in ['network_metrics', 'data_export']:
             if not check_feature_access('network_metrics' if selected_page == 'network_metrics' else 'data_export', user['subscription']):
                 st.error("🔒 This feature requires Premium+ subscription")
                 st.info("Redirecting to upgrade page...")
-                st.switch_page('pages/5_⚙️_Authentication.py')
+                st.switch_page('pages/authentication.py')
                 return
         
         if selected_page == 'admin_panel' and user['username'] != 'admin':
@@ -467,11 +497,11 @@ def render_auth_section(user):
         
         # Login button
         if st.button("🔑 Login", use_container_width=True, key="sidebar_login", type="primary"):
-            st.switch_page("pages/5_⚙️_Authentication.py")
+            st.switch_page("pages/authentication.py")
         
         # Sign up button
         if st.button("🚀 Create Free Account", use_container_width=True, key="sidebar_signup"):
-            st.switch_page("pages/5_⚙️_Authentication.py")
+            st.switch_page("pages/authentication.py")
         
         # Quick benefits
         st.markdown("**🆓 Free Account Benefits:**")
@@ -497,7 +527,7 @@ def render_auth_section(user):
         
         # Quick actions
         if st.button("👤 Profile & Settings", use_container_width=True, key="sidebar_profile"):
-            st.switch_page("pages/5_⚙️_Authentication.py")
+            st.switch_page("pages/authentication.py")
         
         # Logout
         if st.button("🚪 Logout", use_container_width=True, key="sidebar_logout", type="secondary"):
@@ -510,7 +540,7 @@ def render_auth_section(user):
             st.markdown("### ⬆️ Upgrade")
             st.info("Unlock premium features!")
             if st.button("⭐ Upgrade to Premium", key="sidebar_upgrade", use_container_width=True):
-                st.switch_page("pages/5_⚙️_Authentication.py")
+                st.switch_page("pages/authentication.py")
 
 def render_sidebar_stats():
     """Render quick stats in sidebar"""
@@ -569,11 +599,11 @@ def show_login_prompt(feature_name: str = "this feature"):
     
     with col1:
         if st.button("🚀 Create Account", type="primary", use_container_width=True, key=f"create_account_{safe_feature_name}"):
-            st.switch_page("pages/5_⚙️_Authentication.py")
+            st.switch_page("pages/authentication.py")
     
     with col2:
         if st.button("🔑 Login", use_container_width=True, key=f"login_{safe_feature_name}"):
-            st.switch_page("pages/5_⚙️_Authentication.py")
+            st.switch_page("pages/authentication.py")
     
     with col3:
         if st.button("ℹ️ Learn More", use_container_width=True, key=f"learn_more_{safe_feature_name}"):
@@ -607,7 +637,7 @@ def show_upgrade_prompt(current_subscription: str, required_subscription: str):
         ):
             st.balloons()
             st.success(f"Redirecting to {required_subscription} upgrade...")
-            st.switch_page("pages/5_⚙️_Authentication.py")
+            st.switch_page("pages/authentication.py")
     
     with col2:
         if st.button(
@@ -615,7 +645,7 @@ def show_upgrade_prompt(current_subscription: str, required_subscription: str):
             use_container_width=True, 
             key=f"view_plans_{required_subscription}_{current_subscription}"
         ):
-            st.switch_page("pages/5_⚙️_Authentication.py")
+            st.switch_page("pages/authentication.py")
 
 def render_feature_access_check(feature_name: str, required_subscription: list, current_user):
     """Check and handle feature access with appropriate prompts"""
