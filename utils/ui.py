@@ -262,13 +262,13 @@ def render_page_header(title: str, subtitle: str = "", show_auth_buttons: bool =
                     st.switch_page("pages/5_⚙️_Authentication.py")
 
 def render_sidebar_navigation(user):
-    """Render sidebar navigation for all pages"""
+    """Render sidebar navigation using Streamlit Antd Components for all pages"""
     with st.sidebar:
         # Logo and title
         st.markdown("# 💎 Kaspa Analytics")
         st.markdown(f"*Professional Analysis Platform*")
         
-        # User info
+        # User info badge
         if user['username'] != 'public':
             st.markdown(f"**👤 {user['name']}**")
             st.markdown(f'<span class="subscription-badge badge-{user["subscription"]}">{user["subscription"].upper()}</span>', unsafe_allow_html=True)
@@ -278,37 +278,149 @@ def render_sidebar_navigation(user):
         
         st.markdown("---")
         
-        # Navigation menu
-        st.markdown("### 📊 Navigation")
+        # Create navigation menu items based on user subscription
+        menu_items = []
         
-        # Home
-        if st.button("🏠 Dashboard", use_container_width=True, key="nav_home"):
-            st.switch_page("streamlit_app.py")
+        # Dashboard (always available)
+        menu_items.append(
+            sac.MenuItem('dashboard', icon='house-fill', description='Main overview',
+                        tag=sac.Tag('Home', color='blue'))
+        )
         
-        # Price Charts
-        if st.button("📈 Price Charts", use_container_width=True, key="nav_charts"):
-            st.switch_page("pages/1_📈_Price_Charts.py")
+        # Analytics section
+        analytics_children = []
         
-        # Power Law
-        if user['subscription'] == 'public':
-            st.button("🔒 Power Law", disabled=True, use_container_width=True, help="Requires account")
+        # Price Charts (always available)
+        analytics_children.append(
+            sac.MenuItem('price_charts', icon='graph-up', description='Advanced price analysis')
+        )
+        
+        # Power Law (requires account)
+        if user['username'] == 'public':
+            analytics_children.append(
+                sac.MenuItem('power_law', icon='bar-chart', description='Mathematical models',
+                           tag=sac.Tag('Login Required', color='orange'), disabled=True)
+            )
         else:
-            if st.button("📊 Power Law", use_container_width=True, key="nav_powerlaw"):
-                st.switch_page("pages/2_📊_Power_Law.py")
+            power_law_tag = sac.Tag('Basic', color='gray') if user['subscription'] == 'free' else sac.Tag('Advanced', color='green')
+            analytics_children.append(
+                sac.MenuItem('power_law', icon='bar-chart', description='Mathematical models',
+                           tag=power_law_tag)
+            )
         
         # Network Metrics (Premium+)
         if user['subscription'] in ['premium', 'pro']:
-            if st.button("🌐 Network Metrics", use_container_width=True, key="nav_network"):
-                st.switch_page("pages/3_🌐_Network_Metrics.py")
+            analytics_children.append(
+                sac.MenuItem('network_metrics', icon='diagram-3', description='Blockchain metrics',
+                           tag=sac.Tag('Premium', color='gold'))
+            )
         else:
-            st.button("🔒 Network Metrics", disabled=True, use_container_width=True, help="Requires Premium+")
+            analytics_children.append(
+                sac.MenuItem('network_metrics', icon='diagram-3', description='Blockchain metrics',
+                           tag=sac.Tag('Premium+', color='orange'), disabled=True)
+            )
+        
+        # Add analytics section
+        menu_items.append(
+            sac.MenuItem('analytics', icon='graph-up-arrow', description='Analysis tools', children=analytics_children)
+        )
+        
+        # Data section
+        data_children = []
         
         # Data Export (Premium+)
         if user['subscription'] in ['premium', 'pro']:
-            if st.button("📋 Data Export", use_container_width=True, key="nav_export"):
-                st.switch_page("pages/4_📋_Data_Export.py")
+            export_tag = sac.Tag('API', color='purple') if user['subscription'] == 'pro' else sac.Tag('Export', color='green')
+            data_children.append(
+                sac.MenuItem('data_export', icon='download', description='Export & API access',
+                           tag=export_tag)
+            )
         else:
-            st.button("🔒 Data Export", disabled=True, use_container_width=True, help="Requires Premium+")
+            data_children.append(
+                sac.MenuItem('data_export', icon='download', description='Export & API access',
+                           tag=sac.Tag('Premium+', color='orange'), disabled=True)
+            )
+        
+        # Add data section if there are items
+        if data_children:
+            menu_items.append(
+                sac.MenuItem('data', icon='database', description='Data management', children=data_children)
+            )
+        
+        # Account section
+        account_children = []
+        
+        if user['username'] == 'public':
+            account_children.extend([
+                sac.MenuItem('login', icon='box-arrow-in-right', description='Sign in'),
+                sac.MenuItem('register', icon='person-plus', description='Create account')
+            ])
+        else:
+            account_children.extend([
+                sac.MenuItem('profile', icon='person-gear', description='Profile & settings'),
+                sac.MenuItem('logout', icon='box-arrow-left', description='Sign out')
+            ])
+        
+        menu_items.append(
+            sac.MenuItem('account', icon='person-circle', description='Account management', children=account_children)
+        )
+        
+        # Admin section (admin only)
+        if user['username'] == 'admin':
+            menu_items.append(
+                sac.MenuItem(type='divider')
+            )
+            menu_items.append(
+                sac.MenuItem('admin_panel', icon='shield-check', description='Admin tools', 
+                           tag=sac.Tag('Admin', color='red'))
+            )
+        
+        # Render the menu
+        selected = sac.menu(
+            items=menu_items,
+            key='main_navigation',
+            open_all=False,
+            indent=20,
+            size='default'
+        )
+        
+        # Handle navigation
+        handle_navigation(selected, user)
+        
+        # Quick stats in sidebar
+        render_sidebar_stats()
+
+def handle_navigation(selected, user):
+    """Handle navigation based on menu selection"""
+    if selected == 'dashboard':
+        st.switch_page("streamlit_app.py")
+    
+    elif selected == 'price_charts':
+        st.switch_page("pages/1_📈_Price_Charts.py")
+    
+    elif selected == 'power_law':
+        if user['username'] != 'public':
+            st.switch_page("pages/2_📊_Power_Law.py")
+    
+    elif selected == 'network_metrics':
+        if user['subscription'] in ['premium', 'pro']:
+            st.switch_page("pages/3_🌐_Network_Metrics.py")
+    
+    elif selected == 'data_export':
+        if user['subscription'] in ['premium', 'pro']:
+            st.switch_page("pages/4_📋_Data_Export.py")
+    
+    elif selected == 'login' or selected == 'register' or selected == 'profile':
+        st.switch_page("pages/5_⚙️_Authentication.py")
+    
+    elif selected == 'logout':
+        from utils.auth import logout_user
+        logout_user()
+        st.rerun()
+    
+    elif selected == 'admin_panel':
+        if user['username'] == 'admin':
+            st.switch_page("pages/6_👑_Admin_Panel.py")
         
         # Admin Panel (Admin only)
         if user['username'] == 'admin':
@@ -316,30 +428,6 @@ def render_sidebar_navigation(user):
                 st.switch_page("pages/6_👑_Admin_Panel.py")
         
         st.markdown("---")
-        
-        # Authentication section
-        if user['username'] == 'public':
-            st.markdown("### 🔐 Account")
-            
-            if st.button("🔑 Login", use_container_width=True, key="sidebar_login"):
-                st.switch_page("pages/5_⚙️_Authentication.py")
-            
-            if st.button("🚀 Create Account", use_container_width=True, key="sidebar_signup", type="primary"):
-                st.switch_page("pages/5_⚙️_Authentication.py")
-        
-        else:
-            st.markdown("### ⚙️ Account")
-            
-            if st.button("👤 Profile & Settings", use_container_width=True, key="sidebar_profile"):
-                st.switch_page("pages/5_⚙️_Authentication.py")
-            
-            if st.button("🚪 Logout", use_container_width=True, key="sidebar_logout"):
-                from utils.auth import logout_user
-                logout_user()
-                st.rerun()
-        
-        # Quick stats in sidebar
-        render_sidebar_stats()
 
 def render_sidebar_stats():
     """Render quick stats in sidebar"""
