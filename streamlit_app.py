@@ -1,17 +1,8 @@
 """
 Kaspa Analytics Pro - Main Homepage
-Updated with sac.menu navigation integration
+Entry point for the multi-page Streamlit application
 """
 
-# Add this at the very top of streamlit_app.py, right after the imports
-import streamlit as st
-
-# Clear any cached page information to prevent old file references
-if 'pages_cleared' not in st.session_state:
-    st.cache_data.clear()
-    st.cache_resource.clear()
-    st.session_state.pages_cleared = True
-    
 import streamlit as st
 import streamlit_antd_components as sac
 from datetime import datetime
@@ -31,11 +22,10 @@ from utils.auth import get_current_user, is_authenticated
 from utils.data import fetch_kaspa_price_data, get_market_stats
 from utils.ui import (
     render_page_header, 
-    render_sidebar_navigation,  # This now uses sac.menu
+    render_sidebar_navigation, 
     show_login_prompt,
     apply_custom_css,
-    render_footer,
-    set_current_page  # New function for page tracking
+    render_footer
 )
 from utils.config import get_app_config
 
@@ -52,21 +42,54 @@ st.set_page_config(
     }
 )
 
-# Set current page for menu highlighting
-set_current_page('dashboard')
+# SEO and Social Media Meta Tags
+st.markdown("""
+<meta name="description" content="Professional Kaspa blockchain analysis platform with advanced power law models, network metrics, and real-time price tracking.">
+<meta name="keywords" content="Kaspa, KAS, blockchain, cryptocurrency, analysis, power law, price prediction, technical analysis">
+<meta name="author" content="Kaspa Analytics Pro">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://kaspa-analytics.com/">
+<meta property="og:title" content="Kaspa Analytics Pro - Professional Blockchain Analysis">
+<meta property="og:description" content="Advanced Kaspa blockchain analysis with power law models, network metrics, and professional trading tools.">
+<meta property="og:image" content="https://kaspa-analytics.com/assets/social_preview.png">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://kaspa-analytics.com/">
+<meta property="twitter:title" content="Kaspa Analytics Pro">
+<meta property="twitter:description" content="Professional Kaspa blockchain analysis platform">
+<meta property="twitter:image" content="https://kaspa-analytics.com/assets/social_preview.png">
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="/assets/favicon.ico">
+""", unsafe_allow_html=True)
 
 # Apply custom CSS
 apply_custom_css()
 
+# Google Analytics (placeholder)
+st.markdown("""
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'GA_MEASUREMENT_ID');
+</script>
+""", unsafe_allow_html=True)
+
 def main():
-    """Main homepage function with sac.menu integration"""
+    """Main homepage function"""
     
     # Get current user and app config
     user = get_current_user()
     config = get_app_config()
     is_auth = is_authenticated()
     
-    # Render sidebar navigation with sac.menu
+    # Render sidebar navigation
     render_sidebar_navigation(user)
     
     # Main content
@@ -79,7 +102,7 @@ def main():
     render_footer()
 
 def render_public_homepage():
-    """Public homepage with call-to-action for sac.menu navigation"""
+    """Public homepage for non-authenticated users"""
     
     # Hero section
     render_page_header(
@@ -88,124 +111,7 @@ def render_public_homepage():
         show_auth_buttons=True
     )
     
-    # Feature highlight with navigation preview
-    st.subheader("🗺️ Platform Navigation")
-    st.info("👈 Check out our new navigation menu in the sidebar! Create an account to unlock all features.")
-    
-    # Quick overview of navigation structure
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("#### 📊 Analytics Section")
-        st.markdown("- **Price Charts**: Advanced technical analysis")
-        st.markdown("- **Power Law**: Mathematical price models")
-        st.markdown("- *Login required for full access*")
-        
-        st.markdown("#### 💾 Data Section")
-        st.markdown("- **Network Metrics**: Blockchain statistics")
-        st.markdown("- **Data Export**: Download & API access") 
-        st.markdown("- *Premium subscription required*")
-    
-    with col2:
-        st.markdown("#### 👤 Account Section")
-        st.markdown("- **Authentication**: Login & registration")
-        st.markdown("- **Profile Management**: Settings & billing")
-        st.markdown("- **Subscription Plans**: Free, Premium, Pro")
-        
-        st.markdown("#### 🔗 Quick Links")
-        st.markdown("- **Kaspa.org**: Official website")
-        st.markdown("- **GitHub**: Source code & development")
-        st.markdown("- **Discord**: Community support")
-    
-    # Live Market Data (same as before)
-    render_market_overview()
-    
-    # Navigation demo
-    st.markdown("---")
-    st.subheader("🎯 Try the Navigation")
-    
-    demo_cols = st.columns(3)
-    
-    with demo_cols[0]:
-        if st.button("📈 View Price Charts", use_container_width=True, type="primary"):
-            st.switch_page("pages/1_📈_Price_Charts.py")
-    
-    with demo_cols[1]:
-        if st.button("🔑 Create Account", use_container_width=True):
-            st.switch_page("pages/5_⚙️_Authentication.py")
-    
-    with demo_cols[2]:
-        if st.button("📊 Power Law Demo", use_container_width=True):
-            st.switch_page("pages/2_📊_Power_Law.py")
-    
-    # Feature showcase (same as before but with navigation context)
-    render_feature_showcase_with_navigation()
-
-def render_authenticated_homepage(user):
-    """Authenticated dashboard with navigation integration"""
-    
-    subscription = user['subscription']
-    
-    # Welcome header
-    render_page_header(
-        f"👋 Welcome back, {user['name']}!",
-        f"Your {subscription.title()} Dashboard - Use the sidebar menu to navigate",
-        show_auth_buttons=False
-    )
-    
-    # Navigation guide for new users
-    if st.session_state.get('show_navigation_guide', True):
-        with st.expander("🗺️ Navigation Guide", expanded=False):
-            st.markdown("""
-            **New sidebar navigation features:**
-            - 📊 **Analytics**: Access all your analysis tools
-            - 💾 **Data**: Network metrics and export features
-            - 👤 **Account**: Manage your profile and subscription
-            - 🔗 **Quick Links**: External Kaspa resources
-            
-            Your current plan unlocks specific features - look for the tags next to menu items!
-            """)
-            
-            if st.button("Got it! Hide this guide", key="hide_nav_guide"):
-                st.session_state.show_navigation_guide = False
-                st.rerun()
-    
-    # Quick stats dashboard
-    render_dashboard_stats(user)
-    
-    # Quick actions with navigation context
-    st.subheader("⚡ Quick Actions")
-    st.markdown("*Use the sidebar menu for full navigation, or try these shortcuts:*")
-    
-    action_cols = st.columns(4)
-    
-    with action_cols[0]:
-        if st.button("📈 Price Charts", key="dash_charts", use_container_width=True):
-            st.switch_page("pages/1_📈_Price_Charts.py")
-    
-    with action_cols[1]:
-        if st.button("📊 Power Law", key="dash_powerlaw", use_container_width=True):
-            st.switch_page("pages/2_📊_Power_Law.py")
-    
-    with action_cols[2]:
-        if subscription in ['premium', 'pro']:
-            if st.button("🌐 Network Metrics", key="dash_network", use_container_width=True):
-                st.switch_page("pages/3_🌐_Network_Metrics.py")
-        else:
-            st.button("🔒 Network Metrics", disabled=True, use_container_width=True, help="Premium+ required")
-    
-    with action_cols[3]:
-        if subscription in ['premium', 'pro']:
-            if st.button("📋 Data Export", key="dash_export", use_container_width=True):
-                st.switch_page("pages/4_📋_Data_Export.py")
-        else:
-            st.button("🔒 Data Export", disabled=True, use_container_width=True, help="Premium+ required")
-    
-    # Recent activity and chart preview (same as before)
-    render_user_dashboard_content(user)
-
-def render_market_overview():
-    """Market overview section"""
+    # Key metrics showcase
     st.subheader("📊 Live Market Data")
     
     col1, col2, col3, col4 = st.columns(4)
@@ -238,56 +144,111 @@ def render_market_overview():
             "Network Hash Rate", 
             f"{stats.get('hash_rate', 0):.2f} EH/s"
         )
-
-def render_feature_showcase_with_navigation():
-    """Feature showcase highlighting navigation"""
+    
+    # Quick chart preview (7 days for public)
+    if not df.empty:
+        st.subheader("📈 7-Day Price Preview")
+        chart_data = df.tail(7)
+        
+        if PLOTLY_AVAILABLE:
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=chart_data['timestamp'], 
+                y=chart_data['price'],
+                mode='lines',
+                name='KAS Price',
+                line=dict(color='#70C7BA', width=3)
+            ))
+            
+            fig.update_layout(
+                title="Kaspa Price - Last 7 Days (Public Preview)",
+                xaxis_title="Date",
+                yaxis_title="Price (USD)",
+                height=400,
+                template="plotly_white",
+                showlegend=False
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            # Fallback to basic line chart
+            st.line_chart(chart_data.set_index('timestamp')['price'])
+        
+        st.info("📊 Public users see 7-day preview. Create a free account for 30+ days of data!")
+    
+    # Feature showcase
     st.subheader("🚀 Platform Features")
     
-    # Use sac.tabs for consistency with the menu component
     feature_tabs = sac.tabs([
-        sac.TabsItem(label='Navigation', icon='map'),
         sac.TabsItem(label='Analytics', icon='graph-up'),
         sac.TabsItem(label='Data Access', icon='database'),
         sac.TabsItem(label='Tools', icon='tools'),
     ], key='feature_showcase')
     
-    if feature_tabs == 'Navigation':
-        render_navigation_showcase()
-    elif feature_tabs == 'Analytics':
+    if feature_tabs == 'Analytics':
         render_analytics_showcase()
     elif feature_tabs == 'Data Access':
         render_data_showcase()
     else:
         render_tools_showcase()
-
-def render_navigation_showcase():
-    """Showcase the new navigation system"""
-    col1, col2 = st.columns(2)
     
-    with col1:
-        st.markdown("#### 🗺️ Smart Navigation")
-        st.write("• **Organized Structure**: Analytics, Data, Account sections")
-        st.write("• **Access Control**: Features unlock based on your plan")
-        st.write("• **Visual Indicators**: Tags show required subscription levels")
-        st.write("• **External Links**: Quick access to Kaspa resources")
-        
-        st.markdown("#### 🎯 Subscription Gating")
-        st.write("• **Public**: Basic preview access")
-        st.write("• **Free**: Full navigation, basic features")
-        st.write("• **Premium+**: All features unlocked")
+    # Pricing teaser
+    st.subheader("💰 Choose Your Plan")
     
-    with col2:
-        st.markdown("#### 🚀 Navigation Benefits")
-        st.write("• **Faster Access**: Find features quickly")
-        st.write("• **Clear Hierarchy**: Logical organization")
-        st.write("• **Status Awareness**: Know what you can access")
-        st.write("• **Seamless Upgrades**: Easy subscription management")
-        
-        if st.button("🎯 Try Navigation Now", key="try_navigation", use_container_width=True, type="primary"):
-            st.info("👈 Check out the new sidebar menu!")
+    pricing_cols = st.columns(3)
+    
+    with pricing_cols[0]:
+        with st.container():
+            st.markdown("### 🆓 Free")
+            st.markdown("**$0/month**")
+            st.write("• 30-day price history")
+            st.write("• Basic power law analysis")
+            st.write("• Community support")
+            
+            if st.button("🚀 Get Started Free", key="pricing_free", use_container_width=True, type="primary"):
+                st.switch_page("pages/5_⚙️_Authentication.py")
+    
+    with pricing_cols[1]:
+        with st.container():
+            st.markdown("### ⭐ Premium")
+            st.markdown("**$29/month**")
+            st.write("• Full historical data")
+            st.write("• Advanced analytics")
+            st.write("• Data export")
+            st.write("• Email support")
+            
+            if st.button("⭐ Upgrade to Premium", key="pricing_premium", use_container_width=True):
+                st.switch_page("pages/5_⚙️_Authentication.py")
+    
+    with pricing_cols[2]:
+        with st.container():
+            st.markdown("### 👑 Pro")
+            st.markdown("**$99/month**")
+            st.write("• Everything in Premium")
+            st.write("• API access")
+            st.write("• Custom models")
+            st.write("• Priority support")
+            
+            if st.button("👑 Go Pro", key="pricing_pro", use_container_width=True):
+                st.switch_page("pages/5_⚙️_Authentication.py")
+    
+    # Call to action
+    st.markdown("---")
+    show_login_prompt("the full Kaspa Analytics platform")
 
-def render_dashboard_stats(user):
-    """Dashboard statistics for authenticated users"""
+def render_authenticated_homepage(user):
+    """Authenticated user dashboard"""
+    
+    subscription = user['subscription']
+    
+    # Welcome header
+    render_page_header(
+        f"👋 Welcome back, {user['name']}!",
+        f"Your {subscription.title()} Dashboard",
+        show_auth_buttons=False
+    )
+    
+    # Quick stats dashboard
     col1, col2, col3, col4 = st.columns(4)
     
     df = fetch_kaspa_price_data()
@@ -301,65 +262,111 @@ def render_dashboard_stats(user):
         )
     
     with col2:
-        st.metric("Your Plan", user['subscription'].title())
+        st.metric("Your Plan", subscription.title())
     
     with col3:
-        if user['subscription'] in ['premium', 'pro']:
-            st.metric("Features Unlocked", "All", "100%")
-        elif user['subscription'] == 'free':
-            st.metric("Features Unlocked", "Basic", "60%")
+        if subscription in ['premium', 'pro']:
+            st.metric("Power Law Signal", "Above Trend", "+15%")
         else:
-            st.metric("Features Available", "Preview", "20%")
+            st.metric("Power Law", "🔒 Premium Feature")
     
     with col4:
-        st.metric("Navigation Items", "8+", "New!")
-
-def render_user_dashboard_content(user):
-    """User-specific dashboard content"""
+        st.metric("Active Alerts", "3 Active")
+    
     # Enhanced chart for authenticated users
-    df = fetch_kaspa_price_data()
     if not df.empty:
         st.subheader("📈 Price Analysis Dashboard")
         
-        subscription = user['subscription']
-        
+        # Chart timeframe based on subscription
         if subscription == 'free':
             chart_data = df.tail(30)
-            st.info("📊 Free account: 30-day data. Use sidebar navigation to explore features!")
+            st.info("📊 Free accounts: 30-day data. Upgrade for full historical access!")
         else:
-            chart_data = df.tail(365)
-            st.success(f"📊 {subscription.title()} account: Full access via sidebar navigation")
+            chart_data = df.tail(365)  # 1 year for premium+
+            st.success(f"📊 {subscription.title()} account: Full historical data access")
         
-        # Simple chart for dashboard
-        if PLOTLY_AVAILABLE:
-            fig = go.Figure()
+        # Create advanced chart
+        fig = go.Figure()
+        
+        # Price line
+        fig.add_trace(go.Scatter(
+            x=chart_data['timestamp'], 
+            y=chart_data['price'],
+            mode='lines',
+            name='KAS Price',
+            line=dict(color='#70C7BA', width=2)
+        ))
+        
+        # Add volume for premium users
+        if subscription in ['premium', 'pro'] and PLOTLY_AVAILABLE:
             fig.add_trace(go.Scatter(
-                x=chart_data['timestamp'], 
-                y=chart_data['price'],
+                x=chart_data['timestamp'],
+                y=chart_data['volume'] / 1000000,  # Scale volume
                 mode='lines',
-                name='KAS Price',
-                line=dict(color='#70C7BA', width=2)
+                name='Volume (M)',
+                yaxis='y2',
+                opacity=0.6,
+                line=dict(color='orange')
             ))
             
+            # Add secondary y-axis
             fig.update_layout(
-                title="Recent Price Movement",
+                yaxis2=dict(
+                    title="Volume (Millions)",
+                    overlaying='y',
+                    side='right',
+                    showgrid=False
+                )
+            )
+        
+        if PLOTLY_AVAILABLE:
+            fig.update_layout(
+                title=f"Kaspa Price Analysis - {subscription.title()} View",
                 xaxis_title="Date",
                 yaxis_title="Price (USD)",
-                height=400,
+                height=500,
                 template="plotly_white"
             )
             
             st.plotly_chart(fig, use_container_width=True)
         else:
+            # Fallback to basic chart
             st.line_chart(chart_data.set_index('timestamp')['price'])
     
-    # Recent activity
+    # Quick actions dashboard
+    st.subheader("⚡ Quick Actions")
+    
+    action_cols = st.columns(4)
+    
+    with action_cols[0]:
+        if st.button("📈 Price Charts", key="dash_charts", use_container_width=True):
+            st.switch_page("pages/1_📈_Price_Charts.py")
+    
+    with action_cols[1]:
+        if st.button("📊 Power Law Analysis", key="dash_powerlaw", use_container_width=True):
+            st.switch_page("pages/2_📊_Power_Law.py")
+    
+    with action_cols[2]:
+        if subscription in ['premium', 'pro']:
+            if st.button("🌐 Network Metrics", key="dash_network", use_container_width=True):
+                st.switch_page("pages/3_🌐_Network_Metrics.py")
+        else:
+            st.button("🔒 Network Metrics", disabled=True, use_container_width=True)
+    
+    with action_cols[3]:
+        if subscription in ['premium', 'pro']:
+            if st.button("📋 Data Export", key="dash_export", use_container_width=True):
+                st.switch_page("pages/4_📋_Data_Export.py")
+        else:
+            st.button("🔒 Data Export", disabled=True, use_container_width=True)
+    
+    # Recent activity (placeholder)
     st.subheader("📋 Recent Activity")
     
     activity_data = [
-        {"time": "2 hours ago", "action": "Used new sidebar navigation", "status": "✅"},
-        {"time": "1 day ago", "action": "Viewed price charts", "status": "✅"},
-        {"time": "3 days ago", "action": "Updated profile settings", "status": "✅"},
+        {"time": "2 hours ago", "action": "Exported price data", "status": "✅"},
+        {"time": "1 day ago", "action": "Created custom alert", "status": "✅"},
+        {"time": "3 days ago", "action": "Viewed power law analysis", "status": "✅"},
     ]
     
     for activity in activity_data:
@@ -373,7 +380,7 @@ def render_user_dashboard_content(user):
                 st.write(activity["status"])
 
 def render_analytics_showcase():
-    """Analytics features showcase"""
+    """Show analytics features"""
     col1, col2 = st.columns(2)
     
     with col1:
@@ -397,7 +404,7 @@ def render_analytics_showcase():
             st.switch_page("pages/3_🌐_Network_Metrics.py")
 
 def render_data_showcase():
-    """Data access showcase"""
+    """Show data access features"""
     col1, col2 = st.columns(2)
     
     with col1:
@@ -418,7 +425,7 @@ def render_data_showcase():
             st.switch_page("pages/4_📋_Data_Export.py")
 
 def render_tools_showcase():
-    """Tools showcase"""
+    """Show tools and utilities"""
     col1, col2 = st.columns(2)
     
     with col1:
@@ -433,7 +440,7 @@ def render_tools_showcase():
         st.write("• **API Integration**: Connect your tools")
         st.write("• **White-label Reports**: Branded analysis")
         st.write("• **Team Collaboration**: Share insights")
-        st.write("• **Mobile Access**: Use anywhere")
+        st.write("• **Mobile App**: Access anywhere")
 
 if __name__ == "__main__":
     main()
