@@ -1,74 +1,43 @@
-Skip to content
-Navigation Menu
-dodgedlol2
-kaspa-analytics-pro
-
-Type / to search
-Code
-Issues
-Pull requests
-Actions
-Projects
-Wiki
-Security
-Insights
-Settings
-Commit a66a9bb
-dodgedlol2
-dodgedlol2
-authored
-yesterday
-Verified
-Create config.toml
-main
-1 parent 
-f4cfdbb
- commit 
-a66a9bb
-File tree
-Filter files…
-.streamlit
-config.toml
-1 file changed
-+53
--0
-lines changed
-Search within code
- 
-‎.streamlit/config.toml
-+53
-Lines changed: 53 additions & 0 deletions
-Original file line number	Diff line number	Diff line change
-@@ -0,0 +1,53 @@
 # Streamlit Configuration for Kaspa Analytics Pro
+
 [global]
 # Development mode
 developmentMode = false
+
 # Data directory
 dataDir = ".streamlit"
+
 [logger]
 # Logging level
 level = "info"
+
 [client]
 # Whether to enable CORS
 caching = true
+
 # Connection timeout
 toolbarMode = "viewer"
+
 [server]
 # Port configuration
 port = 8501
 baseUrlPath = ""
+
 # Enable CORS
 enableCORS = false
 enableXsrfProtection = true
+
 # File upload settings
 maxUploadSize = 200
 maxMessageSize = 200
+
 # Enable websocket compression
 enableWebsocketCompression = false
+
 [browser]
 # Whether to automatically open browser
 gatherUsageStats = false
+
 [theme]
 # App theming
 primaryColor = "#70C7BA"
@@ -76,16 +45,9 @@ backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F0F2F6"
 textColor = "#262730"
 font = "sans serif"
+
 [runner]
 # Script runner settings
 magicEnabled = true
 installTracer = false
 fixMatplotlib = true
-0 commit comments
-Comments
-0
- (0)
-Comment
-You're not receiving notifications from this thread.
-
-Create config.toml · dodgedlol2/kaspa-analytics-pro@a66a9bb 
